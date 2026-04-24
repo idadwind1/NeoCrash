@@ -32,7 +32,6 @@ case "$choice" in
         df -h --output=target,avail | tail -n +2
         echo ""
         read -r -p "Enter full path: " dir
-        # Append NeoCrash if user gave a base path
         case "$dir" in
             */NeoCrash) ;;
             *) dir="${dir%/}/NeoCrash" ;;
@@ -42,7 +41,7 @@ case "$choice" in
     *) echo "Invalid option."; exit 1 ;;
 esac
 
-# ── Validate ─────────────────────────────────────
+# ── Validate path ────────────────────────────────
 
 parent="$(dirname "$dir")"
 if [ ! -w "$parent" ] && ! mkdir -p "$dir" 2>/dev/null; then
@@ -56,39 +55,135 @@ echo "Installing to: $dir"
 
 # ── Copy files ───────────────────────────────────
 
-mkdir -p "$dir"/{bin,lib,conf,profiles}
+mkdir -p "$dir"/{bin,lib,conf,profiles,geodata}
 
 cp -f "$SCRIPT_DIR"/bin/neocrash "$dir/bin/neocrash"
 cp -f "$SCRIPT_DIR"/lib/*.sh "$dir/lib/"
-[ -f "$SCRIPT_DIR/conf/neocrash.conf" ] && cp -n "$SCRIPT_DIR/conf/neocrash.conf" "$dir/conf/"
+[ -f "$SCRIPT_DIR/conf/neocrash.conf" ] && cp -n "$SCRIPT_DIR/conf/neocrash.conf" "$dir/neocrash.conf"
 
 chmod +x "$dir/bin/neocrash"
 
-# ── Create config if missing ────────────────────
-
 [ -f "$dir/neocrash.conf" ] || touch "$dir/neocrash.conf"
 
-# ── Set shell profile ───────────────────────────
+# ── Detect architecture ──────────────────────────
+
+_detect_arch() {
+    local machine
+    machine="$(uname -m)"
+    case "$machine" in
+        x86_64)  echo "amd64" ;;
+        aarch64) echo "arm64" ;;
+        armv7*)  echo "armv7" ;;
+        armv6*)  echo "armv6" ;;
+        i386|i686) echo "386" ;;
+        *)       echo "$machine" ;;
+    esac
+}
+
+ARCH="$(_detect_arch)"
+
+# ── Download proxy core ──────────────────────────
+
+echo ""
+echo "Download proxy core? (optional — skip if already in PATH)"
+echo ""
+echo "  1) mihomo  (MetaCubeX/mihomo)"
+echo "  2) sing-box (SagerNet/sing-box)"
+echo "  3) Skip"
+echo ""
+read -r -p "> " core_choice
+
+case "$core_choice" in
+    1)
+        echo ""
+        echo "Fetching latest mihomo release..."
+        MIHOMO_VER="$(curl -fsSL "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" \
+            | grep '"tag_name"' | head -1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')"
+
+        if [ -z "$MIHOMO_VER" ]; then
+            echo "Error: could not fetch mihomo version" >&2
+            exit 1
+        fi
+
+        echo "Latest: mihomo $MIHOMO_VER"
+        MIHOMO_URL="https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_VER}/mihomo-linux-${ARCH}-${MIHOMO_VER}.gz"
+
+        echo "Downloading mihomo-linux-${ARCH}..."
+        if ! curl -fSL --progress-bar -o "$dir/bin/mihomo.gz" "$MIHOMO_URL"; then
+            echo "Error: download failed" >&2
+            echo "URL: $MIHOMO_URL" >&2
+            exit 1
+        fi
+
+        gzip -df "$dir/bin/mihomo.gz"
+        chmod +x "$dir/bin/mihomo"
+        echo "Installed: mihomo $MIHOMO_VER → $dir/bin/mihomo"
+
+        # Set core_type in config
+        grep -q '^core_type=' "$dir/neocrash.conf" \
+            && sed -i 's/^core_type=.*/core_type=mihomo/' "$dir/neocrash.conf" \
+            || echo "core_type=mihomo" >>"$dir/neocrash.conf"
+        ;;
+
+    2)
+        echo ""
+        echo "Fetching latest sing-box release..."
+        SB_VER="$(curl -fsSL "https://api.github.com/repos/SagerNet/sing-box/releases/latest" \
+            | grep '"tag_name"' | head -1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')"
+
+        if [ -z "$SB_VER" ]; then
+            echo "Error: could not fetch sing-box version" >&2
+            exit 1
+        fi
+
+        # Strip leading 'v' for sing-box tarball naming
+        SB_VER_NUM="${SB_VER#v}"
+        echo "Latest: sing-box $SB_VER"
+        SB_URL="https://github.com/SagerNet/sing-box/releases/download/${SB_VER}/sing-box-${SB_VER_NUM}-linux-${ARCH}.tar.gz"
+
+        echo "Downloading sing-box-linux-${ARCH}..."
+        if ! curl -fSL --progress-bar -o "$dir/bin/sing-box.tar.gz" "$SB_URL"; then
+            echo "Error: download failed" >&2
+            echo "URL: $SB_URL" >&2
+            exit 1
+        fi
+
+        tar -xzf "$dir/bin/sing-box.tar.gz" -C "$dir/bin/" \
+            --strip-components=1 \
+            "sing-box-${SB_VER_NUM}-linux-${ARCH}/sing-box"
+        rm -f "$dir/bin/sing-box.tar.gz"
+        chmod +x "$dir/bin/sing-box"
+        echo "Installed: sing-box $SB_VER → $dir/bin/sing-box"
+
+        grep -q '^core_type=' "$dir/neocrash.conf" \
+            && sed -i 's/^core_type=.*/core_type=singbox/' "$dir/neocrash.conf" \
+            || echo "core_type=singbox" >>"$dir/neocrash.conf"
+        ;;
+
+    3)
+        echo "Skipping core download."
+        ;;
+
+    *)
+        echo "Invalid option, skipping core download."
+        ;;
+esac
+
+# ── Set shell profile ────────────────────────────
 # Adapted from ShellCrash set_profile.sh by Juewuy
 
-profile=""
-[ -f "$HOME/.zshrc" ] && profile="$HOME/.zshrc"
-[ -f "$HOME/.bashrc" ] && profile="$HOME/.bashrc"
+shellprofile=""
+[ -f "$HOME/.zshrc" ]  && shellprofile="$HOME/.zshrc"
+[ -f "$HOME/.bashrc" ] && shellprofile="$HOME/.bashrc"
+[ -z "$shellprofile" ] && shellprofile="$HOME/.bashrc" && touch "$shellprofile"
 
-if [ -z "$profile" ]; then
-    # Fallback: create .bashrc
-    profile="$HOME/.bashrc"
-    touch "$profile"
-fi
-
-# Remove old entries, add new ones
-sed -i '/neocrash/d' "$profile" 2>/dev/null || true
-sed -i '/NEOCRASH_DIR/d' "$profile" 2>/dev/null || true
+sed -i '/neocrash/d'   "$shellprofile" 2>/dev/null || true
+sed -i '/NEOCRASH_DIR/d' "$shellprofile" 2>/dev/null || true
 
 {
     echo "export NEOCRASH_DIR=\"$dir\""
     echo "alias neocrash=\"$dir/bin/neocrash\""
-} >>"$profile"
+} >>"$shellprofile"
 
 # ── Done ─────────────────────────────────────────
 
@@ -97,6 +192,6 @@ echo "=================================================="
 echo "  NeoCrash installed successfully!"
 echo "=================================================="
 echo ""
-echo "  Run:  source $profile"
+echo "  Run:  source $shellprofile"
 echo "  Then: neocrash"
 echo ""
