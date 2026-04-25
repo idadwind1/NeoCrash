@@ -5,8 +5,8 @@ VERSION="0.1.0"
 
 # Resolve NEOCRASH_DIR: env var > script location
 if [ -z "${NEOCRASH_DIR:-}" ]; then
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    NEOCRASH_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  NEOCRASH_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
 export NEOCRASH_DIR
 
@@ -29,290 +29,324 @@ getconfig
 RULES_FILE="$NEOCRASH_DIR/rules.txt"
 
 _validate_port() {
-    local port="$1"
-    [[ "$port" =~ ^[0-9]+$ ]] && [ "$port" -ge 1 ] && [ "$port" -le 65535 ]
+  local port="$1"
+  [[ "$port" =~ ^[0-9]+$ ]] && [ "$port" -ge 1 ] && [ "$port" -le 65535 ]
 }
 
 usage() {
-    t help_text
+  t help_text
 }
 
 cmd_status() {
-    local state
-    state="$(core_status)" || true
-    echo "core:      $core_type"
-    echo "status:    $state"
-    echo "profile:   ${active_profile:-none}"
-    echo "log_level: $log_level"
-    echo "bind:      $bind_address"
-    echo "mix_port:  $mix_port"
-    if [ "$tun_mode" = "on" ]; then
-        echo "tun:       on (stack: $tun_stack, device: $tun_device, mtu: $tun_mtu)"
-    else
-        echo "tun:       off"
-    fi
-    local rcount=0
-    if [ -f "$RULES_FILE" ]; then
-        rcount=$(grep -cv -e '^\s*$' -e '^#' "$RULES_FILE" 2>/dev/null) || rcount=0
-    fi
-    echo "rules:     $rcount custom"
-    local gcount=0
-    [ -d "$GEODATA_DIR" ] && gcount=$(find "$GEODATA_DIR" -maxdepth 1 -type f 2>/dev/null | wc -l)
-    echo "geodata:   $gcount files"
+  local state
+  state="$(core_status)" || true
+  echo "core:      $core_type"
+  echo "status:    $state"
+  echo "profile:   ${active_profile:-none}"
+  echo "log_level: $log_level"
+  echo "bind:      $bind_address"
+  echo "mix_port:  $mix_port"
+  if [ "$tun_mode" = "on" ]; then
+    echo "tun:       on (stack: $tun_stack, device: $tun_device, mtu: $tun_mtu)"
+  else
+    echo "tun:       off"
+  fi
+  local rcount=0
+  if [ -f "$RULES_FILE" ]; then
+    rcount=$(grep -cv -e '^\s*$' -e '^#' "$RULES_FILE" 2>/dev/null) || rcount=0
+  fi
+  echo "rules:     $rcount custom"
+  local gcount=0
+  [ -d "$GEODATA_DIR" ] && gcount=$(find "$GEODATA_DIR" -maxdepth 1 -type f 2>/dev/null | wc -l)
+  echo "geodata:   $gcount files"
 }
 
 cmd_config_show() {
-    echo "# Network"
-    echo "mix_port=$mix_port"
-    echo "socks_port=$socks_port"
-    echo "redir_port=$redir_port"
-    echo "api_port=$api_port"
-    echo "dns_port=$dns_port"
-    echo "bind_address=$bind_address"
-    echo ""
-    echo "# Core"
-    echo "core_type=$core_type"
-    echo "log_level=$log_level"
-    echo ""
-    echo "# TUN"
-    echo "tun_mode=$tun_mode"
-    echo "tun_stack=$tun_stack"
-    echo "tun_device=$tun_device"
-    echo "tun_mtu=$tun_mtu"
-    echo "tun_auto_route=$tun_auto_route"
-    echo "tun_auto_detect=$tun_auto_detect"
-    echo "tun_dns_hijack=$tun_dns_hijack"
-    echo "tun_inet4=$tun_inet4"
-    echo "tun_inet6=$tun_inet6"
-    echo ""
-    echo "# Profile"
-    echo "active_profile=${active_profile:-}"
-    echo "update_cron=${update_cron:-off}"
+  echo "# Network"
+  echo "mix_port=$mix_port"
+  echo "socks_port=$socks_port"
+  echo "redir_port=$redir_port"
+  echo "api_port=$api_port"
+  echo "dns_port=$dns_port"
+  echo "bind_address=$bind_address"
+  echo ""
+  echo "# Core"
+  echo "core_type=$core_type"
+  echo "log_level=$log_level"
+  echo ""
+  echo "# TUN"
+  echo "tun_mode=$tun_mode"
+  echo "tun_stack=$tun_stack"
+  echo "tun_device=$tun_device"
+  echo "tun_mtu=$tun_mtu"
+  echo "tun_auto_route=$tun_auto_route"
+  echo "tun_auto_detect=$tun_auto_detect"
+  echo "tun_dns_hijack=$tun_dns_hijack"
+  echo "tun_inet4=$tun_inet4"
+  echo "tun_inet6=$tun_inet6"
+  echo ""
+  echo "# Profile"
+  echo "active_profile=${active_profile:-}"
+  echo "update_cron=${update_cron:-off}"
 }
 
 cmd_set() {
-    local key="${1:-}" value="${2:-}"
+  local key="${1:-}" value="${2:-}"
 
-    if [ -z "$key" ]; then
-        t err_set_usage >&2
-        t hint_keys >&2
-        return 1
-    fi
+  if [ -z "$key" ]; then
+    t err_set_usage >&2
+    t hint_keys >&2
+    return 1
+  fi
 
-    # Handle cron specially
-    if [ "$key" = "cron" ]; then
-        if [ -z "$value" ]; then
-            t err_set_cron_usage >&2
-            return 1
-        fi
-        if [ "$value" = "off" ]; then
-            cron_remove
-            setconfig update_cron ""
-            t auto_update_disabled
-        else
-            cron_set_update "$value"
-            echo "update_cron=$value"
-        fi
-        return 0
-    fi
-
+  # Handle cron specially
+  if [ "$key" = "cron" ]; then
     if [ -z "$value" ]; then
-            tf err_set_value_usage "$key" >&2
-        return 1
+      t err_set_cron_usage >&2
+      return 1
     fi
+    if [ "$value" = "off" ]; then
+      cron_remove
+      setconfig update_cron ""
+      t auto_update_disabled
+    else
+      cron_set_update "$value"
+      echo "update_cron=$value"
+    fi
+    return 0
+  fi
 
-    # Validate based on key
-    case "$key" in
-        mix_port|socks_port|redir_port|api_port|dns_port)
-            if ! _validate_port "$value"; then
-                tf err_invalid_port "$value" >&2
-                return 1
-            fi
-            ;;
-        bind_address)
-            ;;
-        core_type)
-            case "$value" in
-                mihomo|singbox) ;;
-                *) t err_core_type >&2; return 1 ;;
-            esac
-            ;;
-        log_level)
-            case "$value" in
-                silent|error|warning|info|debug) ;;
-                *) t err_log_level >&2; return 1 ;;
-            esac
-            ;;
-        tun_mode)
-            case "$value" in
-                on|off) ;;
-                *) t err_tun_mode >&2; return 1 ;;
-            esac
-            ;;
-        tun_stack)
-            case "$value" in
-                system|gvisor|mixed) ;;
-                *) t err_tun_stack >&2; return 1 ;;
-            esac
-            ;;
-        tun_auto_route|tun_auto_detect)
-            case "$value" in
-                true|false) ;;
-                *) tf err_tun_bool "$key" >&2; return 1 ;;
-            esac
-            ;;
-        tun_mtu)
-            if ! [[ "$value" =~ ^[0-9]+$ ]] || [ "$value" -lt 576 ] || [ "$value" -gt 65535 ]; then
-                t err_tun_mtu >&2
-                return 1
-            fi
-            ;;
-        tun_device|tun_dns_hijack|tun_inet4|tun_inet6)
-            ;;
-        *)
-            tf err_unknown_key "$key" >&2
-            t hint_keys >&2
-            return 1
-            ;;
+  if [ -z "$value" ]; then
+    tf err_set_value_usage "$key" >&2
+    return 1
+  fi
+
+  # Validate based on key
+  case "$key" in
+  mix_port | socks_port | redir_port | api_port | dns_port)
+    if ! _validate_port "$value"; then
+      tf err_invalid_port "$value" >&2
+      return 1
+    fi
+    ;;
+  bind_address) ;;
+  core_type)
+    case "$value" in
+    mihomo | singbox) ;;
+    *)
+      t err_core_type >&2
+      return 1
+      ;;
     esac
+    ;;
+  log_level)
+    case "$value" in
+    silent | error | warning | info | debug) ;;
+    *)
+      t err_log_level >&2
+      return 1
+      ;;
+    esac
+    ;;
+  tun_mode)
+    case "$value" in
+    on | off) ;;
+    *)
+      t err_tun_mode >&2
+      return 1
+      ;;
+    esac
+    ;;
+  tun_stack)
+    case "$value" in
+    system | gvisor | mixed) ;;
+    *)
+      t err_tun_stack >&2
+      return 1
+      ;;
+    esac
+    ;;
+  tun_auto_route | tun_auto_detect)
+    case "$value" in
+    true | false) ;;
+    *)
+      tf err_tun_bool "$key" >&2
+      return 1
+      ;;
+    esac
+    ;;
+  tun_mtu)
+    if ! [[ "$value" =~ ^[0-9]+$ ]] || [ "$value" -lt 576 ] || [ "$value" -gt 65535 ]; then
+      t err_tun_mtu >&2
+      return 1
+    fi
+    ;;
+  tun_device | tun_dns_hijack | tun_inet4 | tun_inet6) ;;
+  lang) ;;
+  *)
+    tf err_unknown_key "$key" >&2
+    t hint_keys >&2
+    return 1
+    ;;
+  esac
 
-    setconfig "$key" "$value"
-    echo "$key=$value"
+  setconfig "$key" "$value"
+  echo "$key=$value"
 }
 
 cmd_rule() {
-    local subcmd="${1:-}"
-    shift || true
-    case "$subcmd" in
-        add)
-            local rule="${1:-}"
-            if [ -z "$rule" ]; then
-                t err_rule_add_usage >&2
-                t err_rule_add_example >&2
-                return 1
-            fi
-            # Validate format: TYPE,value,action
-            local rtype rvalue raction
-            IFS=',' read -r rtype rvalue raction <<<"$rule"
-            case "$rtype" in
-                DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|IP-CIDR|GEOIP|GEOSITE) ;;
-                *) tf err_unknown_rule_type "$rtype" >&2
-                   t hint_rule_types >&2
-                   return 1 ;;
-            esac
-            if [ -z "$rvalue" ]; then
-                t err_rule_value >&2
-                return 1
-            fi
-            if [ -z "$raction" ]; then
-                t err_rule_action >&2
-                return 1
-            fi
-            echo "$rule" >>"$RULES_FILE"
-            tf rule_added "$rule"
-            ;;
-        remove)
-            local num="${1:-}"
-            if [ -z "$num" ] || ! [[ "$num" =~ ^[0-9]+$ ]]; then
-                t err_rule_remove_usage >&2
-                return 1
-            fi
-            if [ ! -f "$RULES_FILE" ]; then
-                t err_no_rules_file >&2
-                return 1
-            fi
-            local total
-            total=$(wc -l <"$RULES_FILE")
-            if [ "$num" -lt 1 ] || [ "$num" -gt "$total" ]; then
-                tf err_line_out_of_range "$num" "$total" >&2
-                return 1
-            fi
-            local removed
-            removed=$(sed -n "${num}p" "$RULES_FILE")
-            sed -i "${num}d" "$RULES_FILE"
-            tf rule_removed "$removed"
-            ;;
-        list)
-            if [ ! -f "$RULES_FILE" ] || [ ! -s "$RULES_FILE" ]; then
-            t no_custom_rules
-                return 0
-            fi
-            local i=1
-            while IFS= read -r line; do
-                echo "  $i) $line"
-                i=$((i + 1))
-            done <"$RULES_FILE"
-            ;;
-        *)
-            t err_rule_subcmd_usage >&2
-            ;;
+  local subcmd="${1:-}"
+  shift || true
+  case "$subcmd" in
+  add)
+    local rule="${1:-}"
+    if [ -z "$rule" ]; then
+      t err_rule_add_usage >&2
+      t err_rule_add_example >&2
+      return 1
+    fi
+    # Validate format: TYPE,value,action
+    local rtype rvalue raction
+    IFS=',' read -r rtype rvalue raction <<<"$rule"
+    case "$rtype" in
+    DOMAIN | DOMAIN-SUFFIX | DOMAIN-KEYWORD | IP-CIDR | GEOIP | GEOSITE) ;;
+    *)
+      tf err_unknown_rule_type "$rtype" >&2
+      t hint_rule_types >&2
+      return 1
+      ;;
     esac
+    if [ -z "$rvalue" ]; then
+      t err_rule_value >&2
+      return 1
+    fi
+    if [ -z "$raction" ]; then
+      t err_rule_action >&2
+      return 1
+    fi
+    echo "$rule" >>"$RULES_FILE"
+    tf rule_added "$rule"
+    ;;
+  remove)
+    local num="${1:-}"
+    if [ -z "$num" ] || ! [[ "$num" =~ ^[0-9]+$ ]]; then
+      t err_rule_remove_usage >&2
+      return 1
+    fi
+    if [ ! -f "$RULES_FILE" ]; then
+      t err_no_rules_file >&2
+      return 1
+    fi
+    local total
+    total=$(wc -l <"$RULES_FILE")
+    if [ "$num" -lt 1 ] || [ "$num" -gt "$total" ]; then
+      tf err_line_out_of_range "$num" "$total" >&2
+      return 1
+    fi
+    local removed
+    removed=$(sed -n "${num}p" "$RULES_FILE")
+    sed -i "${num}d" "$RULES_FILE"
+    tf rule_removed "$removed"
+    ;;
+  list)
+    if [ ! -f "$RULES_FILE" ] || [ ! -s "$RULES_FILE" ]; then
+      t no_custom_rules
+      return 0
+    fi
+    local i=1
+    while IFS= read -r line; do
+      echo "  $i) $line"
+      i=$((i + 1))
+    done <"$RULES_FILE"
+    ;;
+  *)
+    t err_rule_subcmd_usage >&2
+    ;;
+  esac
 }
 
 cmd_geodata() {
-    local subcmd="${1:-}"
-    shift || true
-    case "$subcmd" in
-        list)       geodata_list ;;
-        available)  geodata_available ;;
-        update)
-            if [ "${1:-}" = "all" ] || [ "${1:-}" = "-all" ]; then
-                geodata_update_all
-            else
-                geodata_update "${1:-}"
-            fi
-            ;;
-        update-all) geodata_update_all ;;
-        remove)     geodata_remove "${1:-}" ;;
-        import)     geodata_import "${1:-}" ;;
-        *)
-            t err_geodata_subcmd_usage >&2
-            return 1
-            ;;
-    esac
+  local subcmd="${1:-}"
+  shift || true
+  case "$subcmd" in
+  list) geodata_list ;;
+  available) geodata_available ;;
+  update)
+    if [ "${1:-}" = "all" ] || [ "${1:-}" = "-all" ]; then
+      geodata_update_all
+    else
+      geodata_update "${1:-}"
+    fi
+    ;;
+  update-all) geodata_update_all ;;
+  remove) geodata_remove "${1:-}" ;;
+  import) geodata_import "${1:-}" ;;
+  *)
+    t err_geodata_subcmd_usage >&2
+    return 1
+    ;;
+  esac
 }
 
 cmd_profile() {
-    local subcmd="${1:-}"
-    shift || true
-    case "$subcmd" in
-        list)       profile_list || t no_profiles_found ;;
-        add)        profile_add "${1:-}" "${2:-}" ;;
-        import)     profile_import "${1:-}" "${2:-}" ;;
-        remove)     profile_remove "${1:-}" ;;
-        switch)     profile_switch "${1:-}" ;;
-        update)     profile_update "${1:-}" ;;
-        update-all) profile_update_all ;;
-        *)
-            t err_profile_subcmd_usage >&2
-            return 1
-            ;;
-    esac
+  local subcmd="${1:-}"
+  shift || true
+  case "$subcmd" in
+  list) profile_list || t no_profiles_found ;;
+  add) profile_add "${1:-}" "${2:-}" ;;
+  import) profile_import "${1:-}" "${2:-}" ;;
+  remove) profile_remove "${1:-}" ;;
+  switch) profile_switch "${1:-}" ;;
+  update) profile_update "${1:-}" ;;
+  update-all) profile_update_all ;;
+  *)
+    t err_profile_subcmd_usage >&2
+    return 1
+    ;;
+  esac
 }
 
 # Main dispatch
 case "${1:-}" in
-    start)      core_start ;;
-    stop)       core_stop; t stopped ;;
-    restart)    core_restart ;;
-    status)     cmd_status ;;
-    profile)    shift; cmd_profile "$@" ;;
-    geodata)    shift; cmd_geodata "$@" ;;
-    rule)       shift; cmd_rule "$@" ;;
-    set)        shift; cmd_set "$@" ;;
-    config)
-        case "${2:-}" in
-            show) cmd_config_show ;;
-            *) t err_config_subcmd_usage >&2; exit 1 ;;
-        esac
-        ;;
-    update)     profile_update "${2:-}" ;;
-    version)    echo "neocrash $VERSION" ;;
-    -h|--help)  usage ;;
-    "")         usage ;;
-    *)
-        tf err_unknown_cmd "$1" >&2
-        t hint_help >&2
-        exit 1
-        ;;
+start) core_start ;;
+stop)
+  core_stop
+  t stopped
+  ;;
+restart) core_restart ;;
+status) cmd_status ;;
+profile)
+  shift
+  cmd_profile "$@"
+  ;;
+geodata)
+  shift
+  cmd_geodata "$@"
+  ;;
+rule)
+  shift
+  cmd_rule "$@"
+  ;;
+set)
+  shift
+  cmd_set "$@"
+  ;;
+config)
+  case "${2:-}" in
+  show) cmd_config_show ;;
+  *)
+    t err_config_subcmd_usage >&2
+    exit 1
+    ;;
+  esac
+  ;;
+update) profile_update "${2:-}" ;;
+version) echo "neocrash $VERSION" ;;
+-h | --help) usage ;;
+"") usage ;;
+*)
+  tf err_unknown_cmd "$1" >&2
+  t hint_help >&2
+  exit 1
+  ;;
 esac

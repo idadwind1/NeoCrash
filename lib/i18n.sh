@@ -7,14 +7,13 @@
 declare -gA _NC_STRINGS 2>/dev/null || declare -A _NC_STRINGS
 
 i18n_load() {
-  local lang="${NEOCRASH_LANG:-${LANG:-}}"
-  # Normalize: "fr_FR.UTF-8" → "fr_FR", then "fr"
-  lang="${lang%%.*}"
+  # Priority: NEOCRASH_LANG env > lang config var > system LANG
+  local resolved="${NEOCRASH_LANG:-${lang:-${LANG:-}}}"
+  resolved="${resolved%%.*}"
   local locale_dir="$NEOCRASH_DIR/locale"
 
-  # Try full locale (e.g. fr_FR), then language only (e.g. fr)
   local f
-  for f in "$locale_dir/${lang}.sh" "$locale_dir/${lang%%_*}.sh"; do
+  for f in "$locale_dir/${resolved}.sh" "$locale_dir/${resolved%%_*}.sh"; do
     if [ -f "$f" ]; then
       # shellcheck source=/dev/null
       . "$f"
@@ -34,7 +33,8 @@ t() {
 # tf <key> [printf_args...]
 # Like t() but passes result through printf for %s substitution.
 tf() {
-  local key="$1"; shift
+  local key="$1"
+  shift
   # shellcheck disable=SC2059
   printf "$(t "$key")\n" "$@"
 }
