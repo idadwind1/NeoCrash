@@ -26,17 +26,17 @@ _ensure_geodata_dir() {
 
 # List available geodata files that can be downloaded
 geodata_available() {
-    echo "Mihomo (dat/mmdb):"
-    echo "  geoip.dat            GeoIP rules (Loyalsoldier)"
-    echo "  geosite.dat          GeoSite rules (Loyalsoldier)"
-    echo "  country.mmdb         MaxMind GeoIP (Loyalsoldier)"
-    echo "  country-lite.mmdb    GeoIP CN+private only (Loyalsoldier)"
+    t geodata_available_mihomo
+    t geodata_item_geoip_dat
+    t geodata_item_geosite_dat
+    t geodata_item_country_mmdb
+    t geodata_item_country_lite
     echo ""
-    echo "Sing-box (db/srs):"
-    echo "  geoip.db             GeoIP database (SagerNet)"
-    echo "  geosite.db           GeoSite database (SagerNet)"
-    echo "  geoip-cn.srs         GeoIP CN ruleset (SagerNet)"
-    echo "  geosite-cn.srs       GeoSite CN ruleset (SagerNet)"
+    t geodata_available_singbox
+    t geodata_item_geoip_db
+    t geodata_item_geosite_db
+    t geodata_item_geoip_cn
+    t geodata_item_geosite_cn
 }
 
 # List installed geodata files with sizes
@@ -52,7 +52,7 @@ geodata_list() {
         printf "  %-25s %6s  %s\n" "$name" "$size" "$date"
         found=1
     done
-    [ "$found" -eq 0 ] && echo "No geodata installed"
+    [ "$found" -eq 0 ] && t no_geodata_installed
 }
 
 # Download a geodata file by name
@@ -62,8 +62,8 @@ geodata_update() {
     local name="${1:-}"
 
     if [ -z "$name" ]; then
-        echo "Usage: neocrash geodata update <name>" >&2
-        echo "Run 'neocrash geodata available' to see options" >&2
+        t err_geodata_update_usage >&2
+        t hint_geodata_available >&2
         return 1
     fi
 
@@ -71,8 +71,8 @@ geodata_update() {
     entry="$(_geodata_sources | grep "^${name}|")"
 
     if [ -z "$entry" ]; then
-        echo "Error: unknown geodata '$name'" >&2
-        echo "Run 'neocrash geodata available' to see options" >&2
+        tf err_geodata_unknown "$name" >&2
+        t hint_geodata_available >&2
         return 1
     fi
 
@@ -80,10 +80,10 @@ geodata_update() {
     filename="$(echo "$entry" | cut -d'|' -f2)"
     url="$(echo "$entry" | cut -d'|' -f3)"
 
-    echo "Downloading $name..."
+    tf geodata_downloading "$name"
     if ! curl -fSL --connect-timeout 15 --progress-bar -o "$GEODATA_DIR/${filename}.tmp" "$url"; then
         rm -f "$GEODATA_DIR/${filename}.tmp"
-        echo "Error: download failed" >&2
+        t err_download_failed >&2
         return 1
     fi
 
@@ -92,14 +92,14 @@ geodata_update() {
     fsize="$(wc -c <"$GEODATA_DIR/${filename}.tmp")"
     if [ "$fsize" -lt 1024 ]; then
         rm -f "$GEODATA_DIR/${filename}.tmp"
-        echo "Error: downloaded file is too small ($fsize bytes), likely corrupted" >&2
+        tf err_geodata_too_small "$fsize" >&2
         return 1
     fi
 
     mv -f "$GEODATA_DIR/${filename}.tmp" "$GEODATA_DIR/$filename"
     local size
     size="$(du -h "$GEODATA_DIR/$filename" | cut -f1)"
-    echo "$name installed ($size)"
+    tf geodata_installed "$name" "$size"
 }
 
 # Download all geodata appropriate for the current core type
@@ -121,15 +121,15 @@ geodata_update_all() {
 geodata_remove() {
     local name="${1:-}"
     if [ -z "$name" ]; then
-        echo "Usage: neocrash geodata remove <filename>" >&2
+        t err_geodata_remove_usage >&2
         return 1
     fi
 
     if [ -f "$GEODATA_DIR/$name" ]; then
         rm -f "$GEODATA_DIR/$name"
-        echo "Removed: $name"
+        tf geodata_removed "$name"
     else
-        echo "Error: '$name' not found in $GEODATA_DIR" >&2
+        tf err_geodata_not_found "$name" "$GEODATA_DIR" >&2
         return 1
     fi
 }
@@ -141,12 +141,12 @@ geodata_import() {
     local filepath="${1:-}"
 
     if [ -z "$filepath" ]; then
-        echo "Usage: neocrash geodata import <path>" >&2
+        t err_geodata_import_usage >&2
         return 1
     fi
 
     if [ ! -f "$filepath" ]; then
-        echo "Error: file not found: $filepath" >&2
+        tf err_file_not_found "$filepath" >&2
         return 1
     fi
 
@@ -155,5 +155,5 @@ geodata_import() {
     cp -f "$filepath" "$GEODATA_DIR/$filename"
     local size
     size="$(du -h "$GEODATA_DIR/$filename" | cut -f1)"
-    echo "Imported: $filename ($size)"
+    tf geodata_imported "$filename" "$size"
 }

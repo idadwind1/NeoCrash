@@ -16,10 +16,8 @@ profile_list() {
         local name
         name="$(basename "$f" .url)"
         if [ "$name" = "$active_profile" ]; then
-            echo "$name (active)"
-        else
+            tf profile_active "$name"
             echo "$name"
-        fi
         found=1
     done
     [ "$found" -eq 0 ] && return 1
@@ -42,12 +40,12 @@ profile_import() {
     local name="$1" filepath="$2"
 
     if [ -z "$name" ] || [ -z "$filepath" ]; then
-        echo "Usage: neocrash profile import <name> <path>" >&2
+        t err_profile_import_usage >&2
         return 1
     fi
 
     if [ ! -f "$filepath" ]; then
-        echo "Error: file not found: $filepath" >&2
+        tf err_file_not_found "$filepath" >&2
         return 1
     fi
 
@@ -59,7 +57,7 @@ profile_import() {
     cp -f "$filepath" "$PROFILE_DIR/${name}.${ext}"
     # Mark as local (no URL)
     echo "local:$filepath" >"$PROFILE_DIR/${name}.url"
-    echo "Profile '$name' imported from $filepath"
+    tf profile_imported "$name" "$filepath"
 }
 
 # Download a URL and detect config type by content
@@ -69,14 +67,14 @@ profile_add() {
     local name="$1" url="$2"
 
     if [ -z "$name" ] || [ -z "$url" ]; then
-        echo "Usage: neocrash profile add <name> <url>" >&2
+        t err_profile_add_usage >&2
         return 1
     fi
 
     local tmpfile="$PROFILE_DIR/${name}.tmp"
     if ! curl -fsSL --connect-timeout 10 -o "$tmpfile" "$url"; then
         rm -f "$tmpfile"
-        echo "Error: failed to download from URL" >&2
+        t err_download_url >&2
         return 1
     fi
 
@@ -87,18 +85,18 @@ profile_add() {
 
     mv -f "$tmpfile" "$PROFILE_DIR/${name}.${ext}"
     echo "$url" >"$PROFILE_DIR/${name}.url"
-    echo "Profile '$name' added"
+    tf profile_added "$name"
 }
 
 # $1=name
 profile_remove() {
     local name="$1"
     if [ -z "$name" ]; then
-        echo "Usage: neocrash profile remove <name>" >&2
+        t err_profile_remove_usage >&2
         return 1
     fi
     if [ ! -f "$PROFILE_DIR/${name}.url" ]; then
-        echo "Error: profile '$name' not found" >&2
+        tf err_profile_not_found "$name" >&2
         return 1
     fi
 
@@ -108,19 +106,19 @@ profile_remove() {
         setconfig active_profile ""
         active_profile=""
     fi
-    echo "Profile '$name' removed"
+    tf profile_removed "$name"
 }
 
 # $1=name
 profile_switch() {
     local name="$1"
     if [ -z "$name" ]; then
-        echo "Usage: neocrash profile switch <name>" >&2
+        t err_profile_switch_usage >&2
         return 1
     fi
 
     if [ ! -f "$PROFILE_DIR/${name}.url" ]; then
-        echo "Error: profile '$name' not found" >&2
+        tf err_profile_not_found "$name" >&2
         return 1
     fi
 
@@ -136,7 +134,7 @@ profile_switch() {
     if [ "$was_running" -eq 1 ]; then
         core_start
     else
-        echo "Switched to profile '$name'"
+        tf profile_switched "$name"
     fi
 }
 
@@ -145,13 +143,13 @@ profile_switch() {
 profile_update() {
     local name="${1:-$active_profile}"
     if [ -z "$name" ]; then
-        echo "Error: no profile specified and no active profile set" >&2
+        t err_no_profile_specified >&2
         return 1
     fi
 
     local urlfile="$PROFILE_DIR/${name}.url"
     if [ ! -f "$urlfile" ]; then
-        echo "Error: no URL stored for profile '$name'" >&2
+        tf err_no_url_stored "$name" >&2
         return 1
     fi
 
@@ -169,7 +167,7 @@ profile_update() {
     if [[ "$url" == local:* ]]; then
         local localpath="${url#local:}"
         if [ ! -f "$localpath" ]; then
-            echo "Error: local file no longer exists: $localpath" >&2
+            tf err_local_file_gone "$localpath" >&2
             [ "$was_running" -eq 1 ] && core_start
             return 1
         fi
@@ -182,7 +180,7 @@ profile_update() {
         local tmpfile="$PROFILE_DIR/${name}.tmp"
         if ! curl -fsSL --connect-timeout 10 -o "$tmpfile" "$url"; then
             rm -f "$tmpfile"
-            echo "Error: failed to update profile '$name'" >&2
+            tf err_profile_update_failed "$name" >&2
             [ "$was_running" -eq 1 ] && core_start
             return 1
         fi
@@ -197,17 +195,17 @@ profile_update() {
     if [ "$was_running" -eq 1 ]; then
         core_start
     else
-        echo "Profile '$name' updated"
+        tf profile_updated "$name"
     fi
 }
 
 profile_update_all() {
     local names
-    names="$(_profile_names)" || { echo "No profiles found" >&2; return 1; }
+    names="$(_profile_names)" || { t no_profiles_found >&2; return 1; }
 
     local name
     while IFS= read -r name; do
-        echo "Updating $name..."
+        tf profile_updating "$name"
         profile_update "$name"
     done <<<"$names"
 }

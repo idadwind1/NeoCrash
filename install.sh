@@ -5,20 +5,61 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "=================================================="
-echo "  NeoCrash Installer"
-echo "=================================================="
+# ── i18n ─────────────────────────────────────────
+declare -A _S
+_S[title]="  NeoCrash Installer"
+_S[select_dir]="Select install directory:"
+_S[opt_etc]="  1) /etc/NeoCrash              (requires root)"
+_S[opt_usr]="  2) /usr/share/NeoCrash        (requires root)"
+_S[opt_home]="  3) ~/.local/share/NeoCrash    (current user)"
+_S[opt_custom]="  4) Custom path"
+_S[opt_cancel]="  0) Cancel"
+_S[available_mounts]="Available mount points:"
+_S[cancelled]="Cancelled."
+_S[invalid_option]="Invalid option."
+_S[err_no_write]="Error: Cannot write to %s"
+_S[err_try_sudo]="Try running with sudo or pick a different path."
+_S[installing_to]="Installing to: %s"
+_S[download_core]="Download proxy core? (optional — skip if already in PATH)"
+_S[opt_mihomo]="  1) mihomo  (MetaCubeX/mihomo)"
+_S[opt_singbox]="  2) sing-box (SagerNet/sing-box)"
+_S[opt_skip]="  3) Skip"
+_S[fetching_mihomo]="Fetching latest mihomo release..."
+_S[err_fetch_mihomo]="Error: could not fetch mihomo version"
+_S[latest_mihomo]="Latest: mihomo %s"
+_S[downloading_mihomo]="Downloading mihomo-linux-%s..."
+_S[err_download]="Error: download failed"
+_S[err_url]="URL: %s"
+_S[installed_mihomo]="Installed: mihomo %s → %s/bin/mihomo"
+_S[fetching_singbox]="Fetching latest sing-box release..."
+_S[err_fetch_singbox]="Error: could not fetch sing-box version"
+_S[latest_singbox]="Latest: sing-box %s"
+_S[downloading_singbox]="Downloading sing-box-linux-%s..."
+_S[installed_singbox]="Installed: sing-box %s → %s/bin/sing-box"
+_S[skip_core]="Skipping core download."
+_S[invalid_core_option]="Invalid option, skipping core download."
+_S[done_title]="  NeoCrash installed successfully!"
+_S[done_run]="  Run:  source %s"
+_S[done_then]="  Then: neocrash"
+
+t()  { echo "${_S[$1]}"; }
+tf() { local k="$1"; shift; printf "${_S[$k]}\n" "$@"; }
+SEP="=================================================="
+
+echo "$SEP"
+t title
+echo "$SEP"
 echo ""
 
 # ── Select install path ─────────────────────────
 
-echo "Select install directory:"
+t select_dir
 echo ""
-echo "  1) /etc/NeoCrash              (requires root)"
-echo "  2) /usr/share/NeoCrash        (requires root)"
-echo "  3) ~/.local/share/NeoCrash    (current user)"
-echo "  4) Custom path"
-echo "  0) Cancel"
+t opt_etc
+t opt_usr
+t opt_home
+t opt_custom
+t opt_cancel
 echo ""
 read -r -p "> " choice
 
@@ -28,7 +69,7 @@ case "$choice" in
     3) dir="$HOME/.local/share/NeoCrash" ;;
     4)
         echo ""
-        echo "Available mount points:"
+        t available_mounts
         df -h --output=target,avail | tail -n +2
         echo ""
         read -r -p "Enter full path: " dir
@@ -37,21 +78,21 @@ case "$choice" in
             *) dir="${dir%/}/NeoCrash" ;;
         esac
         ;;
-    0) echo "Cancelled."; exit 0 ;;
-    *) echo "Invalid option."; exit 1 ;;
+    0) t cancelled; exit 0 ;;
+    *) t invalid_option; exit 1 ;;
 esac
 
 # ── Validate path ────────────────────────────────
 
 parent="$(dirname "$dir")"
 if [ ! -w "$parent" ] && ! mkdir -p "$dir" 2>/dev/null; then
-    echo "Error: Cannot write to $parent"
-    echo "Try running with sudo or pick a different path."
+    tf err_no_write "$parent"
+    t err_try_sudo
     exit 1
 fi
 
 echo ""
-echo "Installing to: $dir"
+tf installing_to "$dir"
 
 # ── Copy files ───────────────────────────────────
 
@@ -85,39 +126,39 @@ ARCH="$(_detect_arch)"
 # ── Download proxy core ──────────────────────────
 
 echo ""
-echo "Download proxy core? (optional — skip if already in PATH)"
+t download_core
 echo ""
-echo "  1) mihomo  (MetaCubeX/mihomo)"
-echo "  2) sing-box (SagerNet/sing-box)"
-echo "  3) Skip"
+t opt_mihomo
+t opt_singbox
+t opt_skip
 echo ""
 read -r -p "> " core_choice
 
 case "$core_choice" in
     1)
         echo ""
-        echo "Fetching latest mihomo release..."
+        t fetching_mihomo
         MIHOMO_VER="$(curl -fsSL "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" \
             | grep '"tag_name"' | head -1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')"
 
         if [ -z "$MIHOMO_VER" ]; then
-            echo "Error: could not fetch mihomo version" >&2
+            t err_fetch_mihomo >&2
             exit 1
         fi
 
-        echo "Latest: mihomo $MIHOMO_VER"
+        tf latest_mihomo "$MIHOMO_VER"
         MIHOMO_URL="https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_VER}/mihomo-linux-${ARCH}-${MIHOMO_VER}.gz"
 
-        echo "Downloading mihomo-linux-${ARCH}..."
+        tf downloading_mihomo "$ARCH"
         if ! curl -fSL --progress-bar -o "$dir/bin/mihomo.gz" "$MIHOMO_URL"; then
-            echo "Error: download failed" >&2
-            echo "URL: $MIHOMO_URL" >&2
+            t err_download >&2
+            tf err_url "$MIHOMO_URL" >&2
             exit 1
         fi
 
         gzip -df "$dir/bin/mihomo.gz"
         chmod +x "$dir/bin/mihomo"
-        echo "Installed: mihomo $MIHOMO_VER → $dir/bin/mihomo"
+        tf installed_mihomo "$MIHOMO_VER" "$dir"
 
         # Set core_type in config
         grep -q '^core_type=' "$dir/neocrash.conf" \
@@ -127,24 +168,23 @@ case "$core_choice" in
 
     2)
         echo ""
-        echo "Fetching latest sing-box release..."
+        t fetching_singbox
         SB_VER="$(curl -fsSL "https://api.github.com/repos/SagerNet/sing-box/releases/latest" \
             | grep '"tag_name"' | head -1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')"
 
         if [ -z "$SB_VER" ]; then
-            echo "Error: could not fetch sing-box version" >&2
+            t err_fetch_singbox >&2
             exit 1
         fi
 
-        # Strip leading 'v' for sing-box tarball naming
         SB_VER_NUM="${SB_VER#v}"
-        echo "Latest: sing-box $SB_VER"
+        tf latest_singbox "$SB_VER"
         SB_URL="https://github.com/SagerNet/sing-box/releases/download/${SB_VER}/sing-box-${SB_VER_NUM}-linux-${ARCH}.tar.gz"
 
-        echo "Downloading sing-box-linux-${ARCH}..."
+        tf downloading_singbox "$ARCH"
         if ! curl -fSL --progress-bar -o "$dir/bin/sing-box.tar.gz" "$SB_URL"; then
-            echo "Error: download failed" >&2
-            echo "URL: $SB_URL" >&2
+            t err_download >&2
+            tf err_url "$SB_URL" >&2
             exit 1
         fi
 
@@ -153,7 +193,7 @@ case "$core_choice" in
             "sing-box-${SB_VER_NUM}-linux-${ARCH}/sing-box"
         rm -f "$dir/bin/sing-box.tar.gz"
         chmod +x "$dir/bin/sing-box"
-        echo "Installed: sing-box $SB_VER → $dir/bin/sing-box"
+        tf installed_singbox "$SB_VER" "$dir"
 
         grep -q '^core_type=' "$dir/neocrash.conf" \
             && sed -i 's/^core_type=.*/core_type=singbox/' "$dir/neocrash.conf" \
@@ -161,11 +201,11 @@ case "$core_choice" in
         ;;
 
     3)
-        echo "Skipping core download."
+        t skip_core
         ;;
 
     *)
-        echo "Invalid option, skipping core download."
+        t invalid_core_option
         ;;
 esac
 
@@ -188,10 +228,10 @@ sed -i '/NEOCRASH_DIR/d' "$shellprofile" 2>/dev/null || true
 # ── Done ─────────────────────────────────────────
 
 echo ""
-echo "=================================================="
-echo "  NeoCrash installed successfully!"
-echo "=================================================="
+echo "$SEP"
+t done_title
+echo "$SEP"
 echo ""
-echo "  Run:  source $shellprofile"
-echo "  Then: neocrash"
+tf done_run "$shellprofile"
+t done_then
 echo ""

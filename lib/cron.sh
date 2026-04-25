@@ -38,6 +38,6 @@ cron_show() {
     if [ -n "$entry" ]; then
         echo "$entry"
     else
-        echo "No scheduled updates"
+        t no_scheduled_updates
     fi
 }

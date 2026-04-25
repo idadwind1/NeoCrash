@@ -32,7 +32,7 @@ _tun_prepare() {
         if [ "$(id -u)" -eq 0 ]; then
             modprobe tun 2>/dev/null || true
         else
-            echo "Warning: /dev/net/tun not found, may need: sudo modprobe tun" >&2
+            t warn_tun_no_dev >&2
         fi
     fi
 }
@@ -151,7 +151,7 @@ _patch_singbox() {
         if grep -q '"inbounds"' "$dst" 2>/dev/null; then
             sed -i "s/\"inbounds\"[[:space:]]*:[[:space:]]*\[/\"inbounds\": [$tun_inbound,/" "$dst"
         else
-            echo "Warning: no inbounds array found in sing-box config, tun not injected" >&2
+            t warn_no_inbounds >&2
         fi
     fi
 }
@@ -165,7 +165,7 @@ _core_command() {
         ! -name "*.url" 2>/dev/null | head -n1)"
 
     if [ -z "$profile_file" ]; then
-        echo "Error: no config file found for profile: $active_profile" >&2
+        tf err_no_profile_file "$active_profile" >&2
         return 1
     fi
 
@@ -198,12 +198,12 @@ core_start() {
     fi
 
     if ! core_find; then
-        echo "Error: core binary '$core_type' not found" >&2
+        tf err_core_not_found "$core_type" >&2
         return 1
     fi
 
     if [ -z "$active_profile" ]; then
-        echo "Error: no active profile set. Use: neocrash profile switch <name>" >&2
+        t err_no_active_profile >&2
         return 1
     fi
 
@@ -217,12 +217,14 @@ core_start() {
 
     sleep 1
     if core_status >/dev/null 2>&1; then
-        local mode_info=""
-        [ "$tun_mode" = "on" ] && mode_info=" (tun: $tun_stack)"
-        echo "$core_type started${mode_info}"
+        if [ "$tun_mode" = "on" ]; then
+            tf core_started_tun "$core_type" "$tun_stack"
+        else
+            tf core_started "$core_type"
+        fi
     else
         rm -f "$PIDFILE"
-        echo "Error: $core_type failed to start" >&2
+        tf err_core_failed_start "$core_type" >&2
         return 1
     fi
 }
@@ -257,10 +259,10 @@ core_status() {
         local pid
         pid="$(cat "$PIDFILE")"
         if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-            echo "running (pid $pid)"
+            tf core_running "$pid"
             return 0
         fi
     fi
-    echo "stopped"
+    t core_stopped
     return 1
 }
