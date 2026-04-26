@@ -1,5 +1,7 @@
 # NeoCrash
 
+English | [简体中文](./README.zh_CN.md)
+
 A minimal shell-based proxy manager for [mihomo](https://github.com/MetaCubeX/mihomo) and [sing-box](https://github.com/SagerNet/sing-box) forked from [ShellCrash](https://github.com/juewuy/ShellCrash) but with CLI.
 
 ## Install
