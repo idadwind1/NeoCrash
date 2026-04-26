@@ -8,10 +8,10 @@ _NC_STRINGS[err_core_not_found]="Error: core binary '%s' not found"
 _NC_STRINGS[err_no_active_profile]="Error: no active profile set. Use: neocrash profile switch <name>"
 _NC_STRINGS[err_core_failed_start]="Error: %s failed to start"
 _NC_STRINGS[core_started]="%s started"
-_NC_STRINGS[core_started_tun]="%s started (tun: %s)"
-_NC_STRINGS[core_running]="running (pid %s)"
+_NC_STRINGS[core_started_tun]="%s started (TUN: %s)"
+_NC_STRINGS[core_running]="running (PID %s)"
 _NC_STRINGS[core_stopped]="stopped"
-_NC_STRINGS[warn_no_inbounds]="Warning: no inbounds array found in sing-box config, tun not injected"
+_NC_STRINGS[warn_no_inbounds]="Warning: no inbounds array found in sing-box config, TUN not injected"
 
 # profile.sh
 _NC_STRINGS[profile_active]="%s (active)"

@@ -18,6 +18,7 @@ _S_en[opt_home]="  3) ~/.local/share/NeoCrash    (current user)"
 _S_en[opt_custom]="  4) Custom path"
 _S_en[opt_cancel]="  0) Cancel"
 _S_en[available_mounts]="Available mount points:"
+_S_en[select_custom_dir]="Enter full path: "
 _S_en[cancelled]="Cancelled."
 _S_en[invalid_option]="Invalid option."
 _S_en[err_no_write]="Error: Cannot write to %s"
@@ -45,10 +46,49 @@ _S_en[done_title]="  NeoCrash installed successfully!"
 _S_en[done_run]="  Run:  source %s"
 _S_en[done_then]="  Then: neocrash"
 
+declare -A _S_zh_CN
+_S_zh_CN[title]="  NeoCrash 安装程序"
+_S_zh_CN[select_lang]="选择语言："
+_S_zh_CN[select_dir]="选择安装目录："
+_S_zh_CN[opt_etc]="  1) /etc/NeoCrash              （需要 root 权限）"
+_S_zh_CN[opt_usr]="  2) /usr/share/NeoCrash        （需要 root 权限）"
+_S_zh_CN[opt_home]="  3) ~/.local/share/NeoCrash    （当前用户）"
+_S_zh_CN[opt_custom]="  4) 自定义路径"
+_S_zh_CN[opt_cancel]="  0) 取消"
+_S_zh_CN[available_mounts]="可用的挂载点："
+_S_zh_CN[select_custom_dir]="输入完整路径："
+_S_zh_CN[cancelled]="已取消。"
+_S_zh_CN[invalid_option]="无效选项。"
+_S_zh_CN[err_no_write]="错误：无法写入 %s"
+_S_zh_CN[err_try_sudo]="请尝试使用 sudo 运行，或选择一个不同的路径。"
+_S_zh_CN[installing_to]="正在安装到：%s"
+_S_zh_CN[download_core]="下载代理核心？（可选——若 PATH 中已有，可跳过）"
+_S_zh_CN[opt_mihomo]="  1) mihomo  (MetaCubeX/mihomo)"
+_S_zh_CN[opt_singbox]="  2) sing-box (SagerNet/sing-box)"
+_S_zh_CN[opt_skip]="  3) 跳过"
+_S_zh_CN[fetching_mihomo]="正在获取 mihomo 最新版……"
+_S_zh_CN[err_fetch_mihomo]="错误：无法获取 mihomo 版本"
+_S_zh_CN[latest_mihomo]="最新版：mihomo %s"
+_S_zh_CN[downloading_mihomo]="正在下载 mihomo-linux-%s……"
+_S_zh_CN[err_download]="错误：下载失败"
+_S_zh_CN[err_url]="URL：%s"
+_S_zh_CN[installed_mihomo]="已安装：mihomo %s → %s/bin/mihomo"
+_S_zh_CN[fetching_singbox]="正在获取 sing-box 最新版……"
+_S_zh_CN[err_fetch_singbox]="错误：无法获取 sing-box 版本"
+_S_zh_CN[latest_singbox]="最新版：sing-box %s"
+_S_zh_CN[downloading_singbox]="正在下载 sing-box-linux-%s……"
+_S_zh_CN[installed_singbox]="已安装：sing-box %s → %s/bin/sing-box"
+_S_zh_CN[skip_core]="跳过核心的下载。"
+_S_zh_CN[invalid_core_option]="无效选项，跳过核心的下载。"
+_S_zh_CN[done_title]="  NeoCrash 安装成功！"
+_S_zh_CN[done_run]="  请先执行：source %s"
+_S_zh_CN[done_then]="  然后执行：neocrash"
+
 # ── Language selection ───────────────────────────
 # List available languages here (code:label).
 _LANGS=(
   "en:English"
+  "zh_CN:简体中文"
 )
 
 echo "Select language:"
@@ -115,7 +155,7 @@ case "$choice" in
   t available_mounts
   df -h --output=target,avail | tail -n +2
   echo ""
-  read -r -p "Enter full path: " dir
+  read -r -p "$(t select_custom_dir)" dir
   case "$dir" in
   */NeoCrash) ;;
   *) dir="${dir%/}/NeoCrash" ;;
