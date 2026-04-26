@@ -145,10 +145,11 @@ tf installing_to "$dir"
 
 # ── Copy files ───────────────────────────────────
 
-mkdir -p "$dir"/{bin,lib,conf,profiles,geodata}
+mkdir -p "$dir"/{bin,lib,conf,profiles,geodata,locale}
 
 cp -f "$SCRIPT_DIR"/bin/neocrash "$dir/bin/neocrash"
 cp -f "$SCRIPT_DIR"/lib/*.sh "$dir/lib/"
+cp -f "$SCRIPT_DIR"/locale/*.sh "$dir/locale/" 2>/dev/null || true
 [ -f "$SCRIPT_DIR/conf/neocrash.conf" ] && cp -n "$SCRIPT_DIR/conf/neocrash.conf" "$dir/neocrash.conf"
 
 chmod +x "$dir/bin/neocrash"
