@@ -181,6 +181,9 @@ Geodata:
   定时任务：
     cron          Cron 表达式 | off              （默认：off）
 
+  语言：
+    lang          语言代码（如 zh_CN、en）        （默认：系统语言）
+
   version                       显示版本
   -h, --help                    显示此帮助
 

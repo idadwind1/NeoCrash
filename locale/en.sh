@@ -180,6 +180,9 @@ Settings:
   Cron:
     cron          Cron schedule | off              (default: off)
 
+  Language:
+    lang          Locale code (e.g. zh_CN, en)     (default: system)
+
   version                       Show version
   -h, --help                    Show this help
 
