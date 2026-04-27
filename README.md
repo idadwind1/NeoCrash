@@ -14,6 +14,10 @@ source ~/.bashrc
 neocrash -h # for help
 ```
 
+## TUN mode
+TUN mode requires root to work.
+Run `neocrash restart` **as root** to use TUN
+
 ## Credits
 
 - [ShellCrash](https://github.com/juewuy/ShellCrash) by Juewuy — config management, cron, and install path patterns adapted from this project

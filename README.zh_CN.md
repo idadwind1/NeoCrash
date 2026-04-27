@@ -14,6 +14,10 @@ source ~/.bashrc
 neocrash -h # 查看帮助
 ```
 
+## TUN模式
+
+TUN模式需要root权限。如需使用请**使用root**运行`neocrash restart`
+
 ## 致谢
 
 - [ShellCrash](https://github.com/juewuy/ShellCrash)（作者：Juewuy）：配置管理、定时任务，以及安装路径模式参考自该项目

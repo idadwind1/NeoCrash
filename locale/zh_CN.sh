@@ -198,4 +198,7 @@ Geodata:
   neocrash rule add "DOMAIN-SUFFIX,example.com,DIRECT"
   neocrash geodata update geoip.dat
   neocrash geodata update-all
-  neocrash set cron "0 */6 * * *"'
+  neocrash set cron "0 */6 * * *"
+
+注意：
+  如需使用TUN模式，你需要以root运行neocrash：使用root运行`neocrash restart`'

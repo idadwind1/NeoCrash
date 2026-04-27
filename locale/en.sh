@@ -197,4 +197,7 @@ Examples:
   neocrash rule add "DOMAIN-SUFFIX,example.com,DIRECT"
   neocrash geodata update geoip.dat
   neocrash geodata update-all
-  neocrash set cron "0 */6 * * *"'
+  neocrash set cron "0 */6 * * *"
+
+Tips:
+  To use TUN mode, you need to run neocrash as root: run `neocrash restart` as root'
