@@ -6,11 +6,10 @@ A minimal shell-based proxy manager for [mihomo](https://github.com/MetaCubeX/mi
 
 ## Install
 
+Run
 ```sh
-git clone https://github.com/idadwind/NeoCrash
-cd NeoCrash
-bash install.sh
-source ~/.bashrc   # or ~/.zshrc
+bash <(curl -fsSL https://raw.githubusercontent.com/idadwind1/NeoCrash/main/install.sh)
+source ~/.bashrc
 
 neocrash -h # for help
 ```
