@@ -3,7 +3,7 @@ set -euo pipefail
 # NeoCrash installer
 # Install path selection adapted from ShellCrash by Juewuy
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_URL="https://github.com/idadwind1/NeoCrash"
 
 # ── Inline translations ───────────────────────────
 # Add a new language by copying an _S_xx block below.
@@ -183,14 +183,22 @@ fi
 echo ""
 tf installing_to "$dir"
 
+# ── Clone repo ───────────────────────────────────
+
+_TMPDIR="$(mktemp -d)"
+trap 'rm -rf "$_TMPDIR"' EXIT
+
+git clone --depth=1 "$REPO_URL" "$_TMPDIR/NeoCrash"
+SRC="$_TMPDIR/NeoCrash"
+
 # ── Copy files ───────────────────────────────────
 
 mkdir -p "$dir"/{bin,lib,conf,profiles,geodata,locale}
 
-cp -f "$SCRIPT_DIR"/bin/neocrash "$dir/bin/neocrash"
-cp -f "$SCRIPT_DIR"/lib/*.sh "$dir/lib/"
-cp -f "$SCRIPT_DIR"/locale/*.sh "$dir/locale/" 2>/dev/null || true
-[ -f "$SCRIPT_DIR/conf/neocrash.conf" ] && cp -n "$SCRIPT_DIR/conf/neocrash.conf" "$dir/neocrash.conf"
+cp -f "$SRC"/bin/neocrash "$dir/bin/neocrash"
+cp -f "$SRC"/lib/*.sh "$dir/lib/"
+cp -f "$SRC"/locale/*.sh "$dir/locale/" 2>/dev/null || true
+[ -f "$SRC/conf/neocrash.conf" ] && cp -n "$SRC/conf/neocrash.conf" "$dir/neocrash.conf"
 
 chmod +x "$dir/bin/neocrash"
 
