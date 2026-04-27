@@ -19,12 +19,12 @@ LIB_DIR="$NEOCRASH_DIR/lib"
 . "$LIB_DIR/cron.sh"
 . "$LIB_DIR/geodata.sh"
 
-i18n_load
-
 # Ensure runtime dirs and config exist
 mkdir -p "$NEOCRASH_DIR/profiles"
 [ -f "$NEOCRASH_DIR/neocrash.conf" ] || touch "$NEOCRASH_DIR/neocrash.conf"
 getconfig
+
+i18n_load
 
 RULES_FILE="$NEOCRASH_DIR/rules.txt"
 
@@ -35,30 +35,6 @@ _validate_port() {
 
 usage() {
   t help_text
-}
-
-cmd_status() {
-  local state
-  state="$(core_status)" || true
-  echo "core:      $core_type"
-  echo "status:    $state"
-  echo "profile:   ${active_profile:-none}"
-  echo "log_level: $log_level"
-  echo "bind:      $bind_address"
-  echo "mix_port:  $mix_port"
-  if [ "$tun_mode" = "on" ]; then
-    echo "tun:       on (stack: $tun_stack, device: $tun_device, mtu: $tun_mtu)"
-  else
-    echo "tun:       off"
-  fi
-  local rcount=0
-  if [ -f "$RULES_FILE" ]; then
-    rcount=$(grep -cv -e '^\s*$' -e '^#' "$RULES_FILE" 2>/dev/null) || rcount=0
-  fi
-  echo "rules:     $rcount custom"
-  local gcount=0
-  [ -d "$GEODATA_DIR" ] && gcount=$(find "$GEODATA_DIR" -maxdepth 1 -type f 2>/dev/null | wc -l)
-  echo "geodata:   $gcount files"
 }
 
 cmd_config_show() {
@@ -311,10 +287,9 @@ case "${1:-}" in
 start) core_start ;;
 stop)
   core_stop
-  t stopped
   ;;
 restart) core_restart ;;
-status) cmd_status ;;
+status) core_show_status ;;
 profile)
   shift
   cmd_profile "$@"

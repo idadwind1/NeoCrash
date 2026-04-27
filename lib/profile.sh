@@ -17,6 +17,7 @@ profile_list() {
     name="$(basename "$f" .url)"
     if [ "$name" = "$active_profile" ]; then
       tf profile_active "$name"
+    else
       echo "$name"
     fi
     found=1

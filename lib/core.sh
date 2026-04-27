@@ -194,7 +194,8 @@ _core_command() {
 
 core_start() {
   if core_status >/dev/null 2>&1; then
-    core_stop
+    tf core_started "$core_type"
+    return 0
   fi
 
   if ! core_find; then
@@ -231,6 +232,7 @@ core_start() {
 
 core_stop() {
   if [ ! -f "$PIDFILE" ]; then
+    tf core_stopped "$core_type"
     return 0
   fi
 
@@ -246,6 +248,7 @@ core_stop() {
     kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null
   fi
   rm -f "$PIDFILE"
+  tf core_stopped "$core_type"
 }
 
 core_restart() {
@@ -253,7 +256,33 @@ core_restart() {
   core_start
 }
 
-# Print status. Returns 0 if running, 1 if not.
+core_show_status() {
+  local state
+  state="$(core_status)" || true
+  tf status_core "$core_type"
+  tf status_status "$state"
+  if [ -f "$PIDFILE" ]; then
+    local pid user
+    pid="$(cat "$PIDFILE")"
+    user="$(ps -o user= -p "$pid" 2>/dev/null || echo "unknown")"
+    tf status_user "$user"
+  fi
+  tf status_profile "${active_profile:-none}"
+  tf status_log_level "$log_level"
+  tf status_bind "$bind_address"
+  tf status_mix_port "$mix_port"
+  if [ "$tun_mode" = "on" ]; then
+    tf status_tun_on "$tun_stack" "$tun_device" "$tun_mtu"
+  else
+    t status_tun_off
+  fi
+  local rcount=0 rules_file="$NEOCRASH_DIR/rules.txt"
+  [ -f "$rules_file" ] && rcount=$(grep -cv -e '^\s*$' -e '^#' "$rules_file" 2>/dev/null) || rcount=0
+  tf status_rules "$rcount"
+  local gcount=0
+  [ -d "$GEODATA_DIR" ] && gcount=$(find "$GEODATA_DIR" -maxdepth 1 -type f 2>/dev/null | wc -l)
+  tf status_geodata "$gcount"
+}
 core_status() {
   if [ -f "$PIDFILE" ]; then
     local pid
@@ -263,6 +292,6 @@ core_status() {
       return 0
     fi
   fi
-  t core_stopped
+  t stopped
   return 1
 }
