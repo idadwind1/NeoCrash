@@ -324,17 +324,25 @@ log)
   fi
   _log_lines=""
   _log_pager=1
+  _log_follow=0
+  _log_tail=1
   shift
   while [ $# -gt 0 ]; do
     case "$1" in
       --no-pager) _log_pager=0 ;;
+      --no-tail)  _log_tail=0; _log_pager=0 ;;
+      -f|--follow) _log_follow=1 ;;
       -n|--lines) _log_lines="${2:-}"; shift ;;
       -n*) _log_lines="${1#-n}" ;;
       --lines=*) _log_lines="${1#--lines=}" ;;
     esac
     shift
   done
-  if [ -n "$_log_lines" ]; then
+  if [ "$_log_tail" -eq 0 ]; then
+    cat "$LOGFILE"
+  elif [ "$_log_follow" -eq 1 ]; then
+    tail -f ${_log_lines:+-n "$_log_lines"} "$LOGFILE"
+  elif [ -n "$_log_lines" ]; then
     tail -n "$_log_lines" "$LOGFILE"
   elif [ "$_log_pager" -eq 0 ]; then
     cat "$LOGFILE"
