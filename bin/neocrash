@@ -316,6 +316,14 @@ config)
   esac
   ;;
 update) profile_update "${2:-}" ;;
+log)
+  LOGFILE="$NEOCRASH_DIR/logs/neocrash.log"
+  if [ ! -f "$LOGFILE" ]; then
+    echo "$LOGFILE" >&2
+    exit 1
+  fi
+  ${PAGER:-less} "$LOGFILE"
+  ;;
 version) echo "neocrash $VERSION" ;;
 -h | --help) usage ;;
 "") usage ;;

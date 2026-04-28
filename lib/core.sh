@@ -213,7 +213,8 @@ core_start() {
   local cmd
   cmd="$(_core_command)" || return 1
 
-  LOGFILE="$NEOCRASH_DIR/neocrash.log"
+  mkdir -p "$NEOCRASH_DIR/logs"
+  LOGFILE="$NEOCRASH_DIR/logs/neocrash.log"
   nohup $cmd >>"$LOGFILE" 2>&1 &
   echo $! >"$PIDFILE"
 

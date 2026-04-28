@@ -119,6 +119,7 @@ Service:
   stop                          Stop the proxy core
   restart                       Restart the proxy core
   status                        Show core status
+  log                           View log with pager
 
 Profiles:
   profile list                  List all profiles
