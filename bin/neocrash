@@ -322,7 +322,25 @@ log)
     echo "$LOGFILE" >&2
     exit 1
   fi
-  ${PAGER:-less} "$LOGFILE"
+  _log_lines=""
+  _log_pager=1
+  shift
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --no-pager) _log_pager=0 ;;
+      -n|--lines) _log_lines="${2:-}"; shift ;;
+      -n*) _log_lines="${1#-n}" ;;
+      --lines=*) _log_lines="${1#--lines=}" ;;
+    esac
+    shift
+  done
+  if [ -n "$_log_lines" ]; then
+    tail -n "$_log_lines" "$LOGFILE"
+  elif [ "$_log_pager" -eq 0 ]; then
+    cat "$LOGFILE"
+  else
+    ${PAGER:-less} "$LOGFILE"
+  fi
   ;;
 version) echo "neocrash $VERSION" ;;
 -h | --help) usage ;;
