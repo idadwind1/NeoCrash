@@ -213,7 +213,8 @@ core_start() {
   local cmd
   cmd="$(_core_command)" || return 1
 
-  nohup $cmd >/dev/null 2>&1 &
+  LOGFILE="$NEOCRASH_DIR/neocrash.log"
+  nohup $cmd >>"$LOGFILE" 2>&1 &
   echo $! >"$PIDFILE"
 
   sleep 1
