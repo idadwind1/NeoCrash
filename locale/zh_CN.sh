@@ -107,6 +107,7 @@ _NC_STRINGS[err_rule_remove_usage]="用法：neocrash rule remove <行号>"
 _NC_STRINGS[err_no_rules_file]="错误：没有规则文件"
 _NC_STRINGS[err_line_out_of_range]="错误：行号 %s 超出范围（1～%s）"
 _NC_STRINGS[rule_removed]="已移除：%s"
+_NC_STRINGS[err_no_log_file]="错误：找不到日志文件：%s"
 _NC_STRINGS[err_unknown_cmd]="未知的命令：%s"
 _NC_STRINGS[hint_help]="执行“neocrash --help”查看用法"
 

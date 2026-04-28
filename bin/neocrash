@@ -319,7 +319,7 @@ update) profile_update "${2:-}" ;;
 log)
   LOGFILE="$NEOCRASH_DIR/logs/neocrash.log"
   if [ ! -f "$LOGFILE" ]; then
-    echo "$LOGFILE" >&2
+    tf err_no_log_file "$LOGFILE" >&2
     exit 1
   fi
   _log_lines=""

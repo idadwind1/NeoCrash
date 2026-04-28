@@ -59,6 +59,7 @@ _NC_STRINGS[err_geodata_too_small]="Error: downloaded file is too small (%s byte
 _NC_STRINGS[geodata_installed]="%s installed (%s)"
 _NC_STRINGS[err_geodata_remove_usage]="Usage: neocrash geodata remove <filename>"
 _NC_STRINGS[geodata_removed]="Removed: %s"
+_NC_STRINGS[err_unknown_cmd]="Unknown command: %s"
 _NC_STRINGS[err_geodata_not_found]="Error: '%s' not found in %s"
 _NC_STRINGS[err_geodata_import_usage]="Usage: neocrash geodata import <path>"
 _NC_STRINGS[geodata_imported]="Imported: %s (%s)"
@@ -106,7 +107,7 @@ _NC_STRINGS[err_rule_remove_usage]="Usage: neocrash rule remove <line_number>"
 _NC_STRINGS[err_no_rules_file]="Error: no rules file"
 _NC_STRINGS[err_line_out_of_range]="Error: line %s out of range (1-%s)"
 _NC_STRINGS[rule_removed]="Removed: %s"
-_NC_STRINGS[err_unknown_cmd]="Unknown command: %s"
+_NC_STRINGS[err_no_log_file]="Error: log file not found: %s"
 _NC_STRINGS[hint_help]="Run 'neocrash --help' for usage"
 
 # help
