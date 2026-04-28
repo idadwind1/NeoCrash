@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.1.0"
+VERSION="v1.1.1"
 
 # Resolve NEOCRASH_DIR: env var > script location
 if [ -z "${NEOCRASH_DIR:-}" ]; then
@@ -329,12 +329,18 @@ log)
   shift
   while [ $# -gt 0 ]; do
     case "$1" in
-      --no-pager) _log_pager=0 ;;
-      --no-tail)  _log_tail=0; _log_pager=0 ;;
-      -f|--follow) _log_follow=1 ;;
-      -n|--lines) _log_lines="${2:-}"; shift ;;
-      -n*) _log_lines="${1#-n}" ;;
-      --lines=*) _log_lines="${1#--lines=}" ;;
+    --no-pager) _log_pager=0 ;;
+    --no-tail)
+      _log_tail=0
+      _log_pager=0
+      ;;
+    -f | --follow) _log_follow=1 ;;
+    -n | --lines)
+      _log_lines="${2:-}"
+      shift
+      ;;
+    -n*) _log_lines="${1#-n}" ;;
+    --lines=*) _log_lines="${1#--lines=}" ;;
     esac
     shift
   done

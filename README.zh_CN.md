@@ -14,6 +14,11 @@ source ~/.bashrc
 neocrash -h # 查看帮助
 ```
 
+或者如果你已经克隆了仓库
+```sh
+./install-local.sh
+```
+
 ## TUN模式
 
 TUN模式需要root权限。如需使用请**使用root**运行`neocrash restart`

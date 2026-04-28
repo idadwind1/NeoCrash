@@ -15,7 +15,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Build tarball
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          ARCHIVE="neocrash-${TAG}.tar.gz"
+          tar -czf "$ARCHIVE" bin/ lib/ locale/
+          echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
+
       - name: Release
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
+          files: |
+            ${{ env.ARCHIVE }}

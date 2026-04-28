@@ -14,6 +14,11 @@ source ~/.bashrc
 neocrash -h # for help
 ```
 
+or alternatively if you have cloned the repo
+```sh
+./install-local.sh
+```
+
 ## TUN mode
 TUN mode requires root to work.
 Run `neocrash restart` **as root** to use TUN

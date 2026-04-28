@@ -3,8 +3,6 @@ set -euo pipefail
 # NeoCrash installer
 # Install path selection adapted from ShellCrash by Juewuy
 
-REPO_URL="https://github.com/idadwind1/NeoCrash"
-
 # ── Inline translations ───────────────────────────
 # Add a new language by copying an _S_xx block below.
 
@@ -183,13 +181,18 @@ fi
 echo ""
 tf installing_to "$dir"
 
-# ── Clone repo ───────────────────────────────────
+# ── Fetch release tarball ────────────────────────
 
 _TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$_TMPDIR"' EXIT
 
-git clone --depth=1 "$REPO_URL" "$_TMPDIR/NeoCrash"
-SRC="$_TMPDIR/NeoCrash"
+_TAG="$(curl -fsSL "https://github.com/idadwind1/NeoCrash/releases/latest" -o /dev/null -w "%{url_effective}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')"
+_TARBALL="neocrash-${_TAG}.tar.gz"
+_URL="https://github.com/idadwind1/NeoCrash/releases/download/${_TAG}/${_TARBALL}"
+
+curl -fsSL "$_URL" -o "$_TMPDIR/$_TARBALL"
+tar -xzf "$_TMPDIR/$_TARBALL" -C "$_TMPDIR"
+SRC="$_TMPDIR"
 
 # ── Copy files ───────────────────────────────────
 
