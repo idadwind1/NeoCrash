@@ -338,6 +338,19 @@ config)
 update) profile_update "${2:-}" ;;
 log)
   LOGFILE="$NEOCRASH_DIR/logs/neocrash.log"
+
+  # Handle subcommands
+  if [ "${2:-}" = "clear" ]; then
+    if [ -f "$LOGFILE" ]; then
+      > "$LOGFILE"
+      echo "Log cleared"
+    else
+      tf err_no_log_file "$LOGFILE" >&2
+      exit 1
+    fi
+    exit 0
+  fi
+
   if [ ! -f "$LOGFILE" ]; then
     tf err_no_log_file "$LOGFILE" >&2
     exit 1
