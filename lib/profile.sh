@@ -63,14 +63,24 @@ profile_import() {
 }
 
 # Download a URL and detect config type by content
-# $1=name $2=url
+# $1=name $2=url (optional - if empty, opens editor)
 profile_add() {
   _ensure_profile_dir
   local name="$1" url="$2"
 
-  if [ -z "$name" ] || [ -z "$url" ]; then
+  if [ -z "$name" ]; then
     t err_profile_add_usage >&2
     return 1
+  fi
+
+  # If no URL provided, create empty profile and open editor
+  if [ -z "$url" ]; then
+    local profile_file="$PROFILE_DIR/${name}.yaml"
+    touch "$profile_file"
+    echo "manual:" >"$PROFILE_DIR/${name}.url"
+    ${EDITOR:-vi} "$profile_file"
+    tf profile_added "$name"
+    return 0
   fi
 
   local tmpfile="$PROFILE_DIR/${name}.tmp"
@@ -213,4 +223,25 @@ profile_update_all() {
     tf profile_updating "$name"
     profile_update "$name"
   done <<<"$names"
+}
+
+# Edit profile with $EDITOR
+profile_edit() {
+  local name="${1:-$active_profile}"
+  if [ -z "$name" ]; then
+    t err_no_profile_specified >&2
+    return 1
+  fi
+
+  local profile_file
+  for ext in yaml json; do
+    profile_file="$PROFILE_DIR/${name}.${ext}"
+    if [ -f "$profile_file" ]; then
+      ${EDITOR:-vi} "$profile_file"
+      return 0
+    fi
+  done
+
+  tf err_no_profile_file "$name" >&2
+  return 1
 }

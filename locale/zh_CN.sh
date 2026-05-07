@@ -129,12 +129,13 @@ _NC_STRINGS[help_text]='neocrash —— mihomo / sing-box 代理核心管理工�
 
 订阅：
   profile list                  列出所有订阅
-  profile add <名称> <url>      从订阅链接添加订阅
+  profile add <名称> [url]      添加订阅（无 URL 时打开编辑器）
   profile import <名称> <路径>  从本地导入订阅配置文件
   profile remove <名称>         移除订阅
   profile switch <名称>         切换到指定订阅
   profile update [名称]         重新下载订阅（默认：当前订阅）
   profile update-all            更新所有订阅
+  profile edit [名称]           用 $EDITOR 编辑订阅（默认：当前订阅）
 
 代理组：
   group list                    列出所有代理组

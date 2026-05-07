@@ -128,12 +128,13 @@ Service:
 
 Profiles:
   profile list                  List all profiles
-  profile add <name> <url>      Add a profile from subscription URL
+  profile add <name> [url]      Add a profile (opens editor if no URL)
   profile import <name> <path>  Import a local config file
   profile remove <name>         Remove a profile
   profile switch <name>         Switch to a profile
   profile update [name]         Re-download profile (default: active)
   profile update-all            Update all profiles
+  profile edit [name]           Edit profile with $EDITOR (default: active)
 
 Proxy Groups:
   group list                    List all proxy groups

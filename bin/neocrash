@@ -276,6 +276,7 @@ cmd_profile() {
   switch) profile_switch "${1:-}" ;;
   update) profile_update "${1:-}" ;;
   update-all) profile_update_all ;;
+  edit) profile_edit "${1:-}" ;;
   *)
     t err_profile_subcmd_usage >&2
     return 1
