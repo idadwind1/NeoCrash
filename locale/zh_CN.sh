@@ -108,6 +108,10 @@ _NC_STRINGS[err_no_rules_file]="错误：没有规则文件"
 _NC_STRINGS[err_line_out_of_range]="错误：行号 %s 超出范围（1～%s）"
 _NC_STRINGS[rule_removed]="已移除：%s"
 _NC_STRINGS[err_no_log_file]="错误：找不到日志文件：%s"
+_NC_STRINGS[err_group_show_usage]="用法：neocrash group show <组名>"
+_NC_STRINGS[err_group_select_usage]="用法：neocrash group select <组名> <代理>"
+_NC_STRINGS[err_core_not_running]="错误：核心未运行"
+_NC_STRINGS[group_selected]="已在组 %s 中选择 %s"
 _NC_STRINGS[err_unknown_cmd]="未知的命令：%s"
 _NC_STRINGS[hint_help]="执行“neocrash --help”查看用法"
 
@@ -131,6 +135,11 @@ _NC_STRINGS[help_text]='neocrash —— mihomo / sing-box 代理核心管理工�
   profile switch <名称>         切换到指定订阅
   profile update [名称]         重新下载订阅（默认：当前订阅）
   profile update-all            更新所有订阅
+
+代理组：
+  group list                    列出所有代理组
+  group show <组名>             显示组内的代理服务器
+  group select <组名> <代理>    切换组内的活动代理
 
 规则：
   rule add <规则>               添加自定义路由规则

@@ -108,6 +108,10 @@ _NC_STRINGS[err_no_rules_file]="Error: no rules file"
 _NC_STRINGS[err_line_out_of_range]="Error: line %s out of range (1-%s)"
 _NC_STRINGS[rule_removed]="Removed: %s"
 _NC_STRINGS[err_no_log_file]="Error: log file not found: %s"
+_NC_STRINGS[err_group_show_usage]="Usage: neocrash group show <group>"
+_NC_STRINGS[err_group_select_usage]="Usage: neocrash group select <group> <proxy>"
+_NC_STRINGS[err_core_not_running]="Error: core is not running"
+_NC_STRINGS[group_selected]="Selected %s in group %s"
 _NC_STRINGS[hint_help]="Run 'neocrash --help' for usage"
 
 # help
@@ -130,6 +134,11 @@ Profiles:
   profile switch <name>         Switch to a profile
   profile update [name]         Re-download profile (default: active)
   profile update-all            Update all profiles
+
+Proxy Groups:
+  group list                    List all proxy groups
+  group show <group>            Show proxies in a group
+  group select <group> <proxy>  Switch active proxy in a group
 
 Rules:
   rule add <rule>               Add a custom routing rule

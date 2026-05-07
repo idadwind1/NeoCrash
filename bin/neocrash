@@ -18,6 +18,7 @@ LIB_DIR="$NEOCRASH_DIR/lib"
 . "$LIB_DIR/profile.sh"
 . "$LIB_DIR/cron.sh"
 . "$LIB_DIR/geodata.sh"
+. "$LIB_DIR/proxy.sh"
 
 # Ensure runtime dirs and config exist
 mkdir -p "$NEOCRASH_DIR/profiles"
@@ -282,6 +283,20 @@ cmd_profile() {
   esac
 }
 
+cmd_group() {
+  local action="${1:-}"
+  shift || true
+  case "$action" in
+  list) proxy_group_list ;;
+  show) proxy_group_show "${1:-}" ;;
+  select) proxy_group_select "${1:-}" "${2:-}" ;;
+  *)
+    echo "Usage: neocrash group <list|show|select> [args]" >&2
+    return 1
+    ;;
+  esac
+}
+
 # Main dispatch
 case "${1:-}" in
 start) core_start ;;
@@ -293,6 +308,10 @@ status) core_show_status ;;
 profile)
   shift
   cmd_profile "$@"
+  ;;
+group)
+  shift
+  cmd_group "$@"
   ;;
 geodata)
   shift
