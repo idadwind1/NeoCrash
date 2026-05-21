@@ -63,15 +63,21 @@ _patch_mihomo() {
   # Custom rules — prepend to the rules: list
   local rulesfile="$NEOCRASH_DIR/rules.txt"
   if [ -f "$rulesfile" ] && [ -s "$rulesfile" ]; then
-    local rules_yaml=""
-    while IFS= read -r rule; do
-      [ -z "$rule" ] && continue
-      [[ "$rule" =~ ^# ]] && continue
-      rules_yaml="${rules_yaml}  - ${rule}\n"
-    done <"$rulesfile"
-    if [ -n "$rules_yaml" ] && grep -q '^rules:' "$dst" 2>/dev/null; then
-      sed -i "/^rules:/a\\$(printf '%b' "$rules_yaml")" "$dst"
-    fi
+    local tmpfile
+    tmpfile="$(mktemp)"
+    while IFS= read -r line; do
+      if [[ "$line" =~ ^rules: ]]; then
+        echo "$line" >>"$tmpfile"
+        while IFS= read -r rule; do
+          [ -z "$rule" ] && continue
+          [[ "$rule" =~ ^# ]] && continue
+          echo "  - $rule" >>"$tmpfile"
+        done <"$rulesfile"
+      else
+        echo "$line" >>"$tmpfile"
+      fi
+    done <"$dst"
+    mv -f "$tmpfile" "$dst"
   fi
 
   # TUN
